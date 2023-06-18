@@ -7,7 +7,7 @@ class AuthController {
 
   private static secret = process.env.JWT_SECRET || 'secret';
 
-  private static generateToken(email: string) {
+  public static generateToken(email: string) {
     return jwt.sign({ email }, AuthController.secret, {
       expiresIn: '1h',
       algorithm: 'HS256',
@@ -58,3 +58,4 @@ class AuthController {
 const authController = new AuthController();
 
 export default authController;
+export { AuthController };
