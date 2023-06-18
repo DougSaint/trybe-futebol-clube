@@ -4,7 +4,7 @@ import AuthService from '../services/Auth.service';
 
 class AuthController {
   private authService = AuthService;
-  
+
   private static secret = process.env.JWT_SECRET || 'secret';
 
   private static generateToken(email: string) {
