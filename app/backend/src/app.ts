@@ -1,4 +1,6 @@
 import * as express from 'express';
+import 'express-async-errors';
+import { NextFunction, Request, Response } from 'express';
 import router from './routes';
 
 class App {
@@ -13,12 +15,26 @@ class App {
     this.app.get('/', (req, res) => res.json({ ok: true }));
 
     this.app.use(router);
+    this.app.use(
+      (
+        err: Error,
+        _req: Request,
+        res: Response,
+        _next: NextFunction,
+      ): Response => {
+        console.error(err);
+        return res.status(500).send('Ocorreu um erro interno do servidor');
+      },
+    );
   }
 
-  private config():void {
+  private config(): void {
     const accessControl: express.RequestHandler = (_req, res, next) => {
       res.header('Access-Control-Allow-Origin', '*');
-      res.header('Access-Control-Allow-Methods', 'GET,POST,DELETE,OPTIONS,PUT,PATCH');
+      res.header(
+        'Access-Control-Allow-Methods',
+        'GET,POST,DELETE,OPTIONS,PUT,PATCH',
+      );
       res.header('Access-Control-Allow-Headers', '*');
       next();
     };
