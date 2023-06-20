@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import * as jwt from 'jsonwebtoken';
 import AuthService from '../services/Auth.service';
+import RequestWithUser from '../Interfaces/IRequestWithUser';
 
 class AuthController {
   private authService = AuthService;
@@ -12,14 +13,6 @@ class AuthController {
       expiresIn: '1h',
       algorithm: 'HS256',
     });
-  }
-
-  private static validateToken(token: string) {
-    try {
-      return jwt.verify(token, process.env.JWT_SECRET || 'secret');
-    } catch (err) {
-      return false;
-    }
   }
 
   public async login(req: Request, res: Response): Promise<Response> {
@@ -35,19 +28,9 @@ class AuthController {
     return res.status(401).json({ message: 'Invalid email or password' });
   }
 
-  public async getRole(req: Request, res: Response): Promise<Response> {
-    const { authorization } = req.headers;
-
-    if (!authorization) return res.status(401).json({ message: 'Token not found' });
-
-    const payload = AuthController.validateToken(authorization);
-
-    if (typeof payload !== 'object') {
-      return res.status(401).json({ message: 'Token must be a valid token' });
-    }
-
-    const user = await this.authService.findByEmail(payload.email);
-
+  public async getRole(req: RequestWithUser, res: Response): Promise<Response> {
+    console.log(this);
+    const { user } = req;
     if (user) {
       return res.status(200).json({ role: user?.role });
     }
