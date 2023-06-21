@@ -21,6 +21,25 @@ class MatchesController {
     }
     return res.status(200).json({ message: 'Finished' });
   }
+
+  public async updateMatch(req: Request, res: Response): Promise<Response> {
+    const { id } = req.params;
+
+    const { homeTeamGoals, awayTeamGoals } = req.body;
+
+    const data = await this.matchesService.updateMatch(
+      +id,
+      +homeTeamGoals,
+      +awayTeamGoals,
+    );
+    return res.status(200).json(data);
+  }
+
+  public async createMatch(req: Request, res: Response): Promise<Response> {
+    const match = req.body;
+    const data = await this.matchesService.createMatch(match);
+    return res.status(201).json(data);
+  }
 }
 
 const matchesController = new MatchesController();

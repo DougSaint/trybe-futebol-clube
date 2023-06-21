@@ -33,16 +33,30 @@ class MatchesService {
     return MatchesService.filterMatches(data, query);
   }
 
-  async finishMatch(id: number) {
-    console.log(id);
+  public async finishMatch(id: number) {
     const match = await this.matchesModel.findByPk(id);
-    console.log(match);
     if (!match) {
       return false;
     }
     match.inProgress = false;
-    match.save();
+    await match.save();
     return true;
+  }
+
+  public async updateMatch(id: number, homeGoals: number, awayGoals: number) {
+    const match = await this.matchesModel.findByPk(id);
+
+    if (!match) {
+      return false;
+    }
+    if (homeGoals) match.homeTeamGoals = homeGoals;
+    if (awayGoals) match.awayTeamGoals = awayGoals;
+    return match.save();
+  }
+
+  public async createMatch(match: IMatches): Promise<IMatches> {
+    console.log(match);
+    return this.matchesModel.create({ ...match, inProgress: true });
   }
 }
 
