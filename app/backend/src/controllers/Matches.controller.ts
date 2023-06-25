@@ -4,8 +4,8 @@ import MatchesService from '../services/Matches.service';
 class MatchesController {
   private matchesService = MatchesService;
 
-  public async getTeams(req: Request, res: Response): Promise<Response> {
-    const data = await this.matchesService.getAllTeams(
+  public async getMatches(req: Request, res: Response): Promise<Response> {
+    const data = await this.matchesService.getMatches(
       req.query.inProgress as string,
     );
 

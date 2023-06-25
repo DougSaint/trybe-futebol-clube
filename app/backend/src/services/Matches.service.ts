@@ -6,13 +6,13 @@ class MatchesService {
   private matchesModel = MatchesModel;
   private teamsModel = TeamsModel;
 
-  private static filterMatches(matches: IMatches[], query: string) {
+  private static filterMatches(matches: IMatches[], query?: string) {
     if (query === 'true') return matches.filter((match) => match.inProgress);
     if (query === 'false') return matches.filter((match) => !match.inProgress);
     return matches;
   }
 
-  async getAllTeams(query: string) {
+  async getMatches(query?: string) {
     const data = await this.matchesModel.findAll({
       include: [
         {
@@ -57,6 +57,10 @@ class MatchesService {
   public async createMatch(match: IMatches): Promise<IMatches> {
     console.log(match);
     return this.matchesModel.create({ ...match, inProgress: true });
+  }
+
+  public async getTeamByPk(id: number) {
+    return this.matchesModel.findByPk(id);
   }
 }
 

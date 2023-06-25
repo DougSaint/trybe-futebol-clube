@@ -9,7 +9,7 @@ matchesRouter.patch('/:id/finish', authMiddleware, (req, res) =>
   matchesController.finishMatch(req, res));
 matchesRouter.patch('/:id', authMiddleware, (req, res) =>
   matchesController.updateMatch(req, res));
-matchesRouter.get('/', (req, res) => matchesController.getTeams(req, res));
+matchesRouter.get('/', (req, res) => matchesController.getMatches(req, res));
 matchesRouter.post('/', authMiddleware, MatchValidate, (req, res) =>
   matchesController.createMatch(req, res));
 

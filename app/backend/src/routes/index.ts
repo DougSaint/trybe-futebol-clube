@@ -4,12 +4,13 @@ import validateEmailAndPassword from '../middlewares/validateUser.middleware';
 import authController from '../controllers/Auth.controller';
 import matchesRouter from './matches.router';
 import AuthMiddleware from '../middlewares/Auth.middleware';
+import leaderboardRouter from './leaderBoard.router';
 
 const router = Router();
 
 router.use('/teams', teamsRouter);
 router.use('/matches', matchesRouter);
-
+router.use('/leaderboard', leaderboardRouter);
 router.post('/login', validateEmailAndPassword, (req, res) =>
   authController.login(req, res));
 router.get('/login/role', AuthMiddleware, (req, res) =>
