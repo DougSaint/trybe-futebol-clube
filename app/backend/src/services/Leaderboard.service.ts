@@ -3,7 +3,7 @@ import IMatches from '../Interfaces/IMatches';
 import teamsService from './Teams.service';
 import ITeamStats from '../Interfaces/ITeamStats';
 import IStatus from '../Interfaces/IStatus';
-
+/* eslint max-lines-per-function: ["error", 50] */
 type homeOrAway = 'home' | 'away';
 
 class LeaderBoardService {
@@ -52,7 +52,11 @@ class LeaderBoardService {
     return acc;
   }
 
-  static getTeamStatus(team: string, matches: IMatches[], filterBy: homeOrAway) {
+  static getTeamStatus(
+    team: string,
+    matches: IMatches[],
+    filterBy: homeOrAway,
+  ) {
     const teamMatches = LeaderBoardService.getTeamMatches(
       team,
       matches,
@@ -62,8 +66,16 @@ class LeaderBoardService {
     return teamMatches.reduce(
       (acc, match) => {
         let newAcc = { ...acc };
-        newAcc = LeaderBoardService.updateWinsLossesDraws(newAcc, match, isHomeTeam);
-        newAcc = LeaderBoardService.updateGoalsOwnGoalsFavor(newAcc, match, isHomeTeam);
+        newAcc = LeaderBoardService.updateWinsLossesDraws(
+          newAcc,
+          match,
+          isHomeTeam,
+        );
+        newAcc = LeaderBoardService.updateGoalsOwnGoalsFavor(
+          newAcc,
+          match,
+          isHomeTeam,
+        );
         return newAcc;
       },
       { wins: 0, loses: 0, draws: 0, totalGames: 0, goalsOwn: 0, goalsFavor: 0 },
@@ -114,6 +126,33 @@ class LeaderBoardService {
       LeaderBoardService.getData(team.teamName, allMatches, 'away'));
     return LeaderBoardService.sortByTotalPoints(data);
   }
+
+  async All() {
+    const homeData = await this.home();
+    const awayData = await this.away();
+    const allTeams = await teamsService.getAllTeams();
+    return allTeams.map((t) => {
+      const a = homeData.find((data) => data.name === t.teamName);
+      const b = awayData.find((data) => data.name === t.teamName);
+      if (!a || !b) return;
+      return {
+        name: t.teamName,
+        totalPoints: a.totalPoints + b.totalPoints,
+        totalVictories: a.totalVictories + b.totalVictories,
+        totalLosses: a.totalLosses + b.totalLosses,
+        totalDraws: a.totalDraws + b.totalDraws,
+        totalGames: a.totalGames + b.totalGames,
+        goalsOwn: a.goalsOwn + b.goalsOwn,
+        goalsFavor: a.goalsFavor + b.goalsFavor,
+        goalsBalance: a.goalsBalance + b.goalsBalance,
+        efficiency:
+          ((a.totalPoints + b.totalPoints)
+            / ((a.totalGames + b.totalGames) * 3))
+          * 100,
+      };
+    });
+  }
 }
 
 export default new LeaderBoardService();
+export { LeaderBoardService };
