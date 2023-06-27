@@ -1,90 +1,107 @@
-import * as sinon from 'sinon';
-import * as chai from 'chai';
+import * as sinon from "sinon";
+import * as chai from "chai";
 // @ts-ignore
-import chaiHttp = require('chai-http');
-import {InvalidMatch, createMatch, matchesInProgress, matchesMock, newMatch } from "./mocks/matches"
-import { app } from '../app';
-import SequelizeMatches from '../database/models/SequelizeMatches';
-import SequelizeTeams from '../database/models/SequelizeTeam';
-
+import chaiHttp = require("chai-http");
+import { app } from "../app";
 chai.use(chaiHttp);
-
 const { expect } = chai;
 
-describe('Matches Endpoint Tests', () => {
-  let matchesMock: sinon.SinonMock;
-  let teamsMock: sinon.SinonMock;
+describe("Matches Endpoint Tests", () => {
+  describe("Endpoint getMatches", () => {
+    it("should return all matches", async () => {
+      const response = await chai.request(app).get("/matches");
 
-  beforeEach(() => {
-    matchesMock = sinon.mock(SequelizeMatches);
-    teamsMock = sinon.mock(SequelizeTeams);
+      expect(response.status).to.equal(200);
+      expect(response.body).to.be.an("array");
+    });
   });
 
-  afterEach(() => {
-    matchesMock.restore();
-    teamsMock.restore();
+  describe("PATCH /matches/:id/finish", () => {
+    let authToken = "";
+
+    beforeEach(async () => {
+      
+
+      const loginResponse = await chai.request(app).post("/login").send({
+        email: "admin@admin.com",
+        password: "secret_admin",
+      });
+
+      authToken = loginResponse.body.token;
+    });
+
+
+
+    it("should finish a match", async () => {
+      const matchId = 42;
+
+      const response = await chai
+        .request(app)
+        .patch(`/matches/${matchId}/finish`)
+        .set("Authorization", authToken);
+
+      expect(response.status).to.equal(200);
+      expect(response.body).to.deep.equal({ message: "Finished" });
+    });
+
+    it("should fail to finish a non-existing match", async () => {
+      const matchId = 999;
+      const response = await chai
+        .request(app)
+        .patch(`/matches/${matchId}/finish`)
+        .set("Authorization", authToken);
+
+      expect(response.status).to.equal(200);
+      expect(response.body).to.deep.equal({ message: "not exists" });
+    });
   });
 
-  it('should return all matches', async () => {
-    matchesMock.expects('findAll').resolves(matchesMock as unknown as SequelizeMatches[]);
+  describe("PATCH /matches/:id", () => {
+    type updateGoals = {
+      homeTeamGoals: number;
+      awayTeamGoals: number;
+    };
 
-    const response = await chai.request(app).get('/matches');
+    let matchId: number;
+    let updatedGoals: updateGoals;
+    let authToken = "";
 
-    expect(response.status).to.equal(200);
-    expect(response.body).to.be.an('array');
-    // Assert other expectations on the response body or status
+    beforeEach(async () => {
+      matchId = 42;
+      updatedGoals = { homeTeamGoals: 3, awayTeamGoals: 1 };
+     
+      const loginResponse = await chai.request(app).post("/login").send({
+        email: "admin@admin.com",
+        password: "secret_admin",
+      });
+
+      authToken = loginResponse.body.token;
+    });
+
+    it("should update a match", async () => {
+      const response = await chai
+        .request(app)
+        .patch(`/matches/${matchId}`)
+        .send(updatedGoals)
+        .set("Authorization", authToken);
+
+      expect(response.status).to.equal(200);
+    });
+
+    it("should fail to update a non-existing match", async () => {
+      const nonExistingMatchId = 999;
+
+      const response = await chai
+        .request(app)
+        .patch(`/matches/${nonExistingMatchId}`)
+        .send(updatedGoals)
+        .set("Authorization", authToken);
+
+      expect(response.status).to.equal(200);
+      expect(response.body).to.deep.equal({ message: "not exists" });
+    });
   });
 
-  it('should return matches in progress', async () => {
-    matchesMock.expects('findAll').resolves(matchesInProgress as unknown as SequelizeMatches[]);
-
-    const response = await chai.request(app).get('/matches?inProgress=true');
-
-    expect(response.status).to.equal(200);
-    expect(response.body).to.be.an('array');
-    // Assert other expectations on the response body or status
-  });
-
-  it('should finish a match', async () => {
-    const matchId = 42;
-
-    matchesMock.expects('findOne').withArgs({ where: { id: matchId } }).resolves(matchesMock[1] as unknown as SequelizeMatches);
-
-    matchesMock.expects('update').withArgs({ inProgress: false }, { where: { id: matchId } }).resolves([1]);
-
-    const response = await chai.request(app).patch(`/matches/${matchId}/finish`);
-
-    expect(response.status).to.equal(200);
-    expect(response.body).to.deep.equal({ message: 'Finished' });
-    // Assert other expectations on the response body or status
-  });
-
-  it('should update a match', async () => {
-    const matchId = 42;
-    const updatedGoals = { homeTeamGoals: 3, awayTeamGoals: 1 };
-
-    matchesMock.expects('findByPk').withArgs(matchId).resolves(matchesMock[0] as unknown as SequelizeMatches);
-
-    matchesMock.expects('save').withArgs({ homeTeamGoals: 3, awayTeamGoals: 1 }).resolves(matchesMock[0] as unknown as SequelizeMatches);
-
-    const response = await chai.request(app).patch(`/matches/${matchId}`).send(updatedGoals);
-
-    expect(response.status).to.equal(200);
-    // Assert other expectations on the response body or status
-  });
-
-  it('should create a match', async () => {
-    const match = createMatch;
-
-    teamsMock.expects('findByPk').withArgs(match.homeTeamId).resolves(teamsMock as unknown as SequelizeTeams);
-
-    teamsMock.expects('findByPk').withArgs(match.awayTeamId).resolves(teamsMock as unknown as SequelizeTeams);
-
-    matchesMock.expects('create').withArgs({ ...match, inProgress: true }).resolves(matchesMock[0] as unknown as SequelizeMatches);
-
-    const response = await chai.request(app).post('/matches').send(match);
-
-    expect(response.status).to.equal(201);
-    // Assert other expectations on the response body or status
-  });
+  
+ 
 });

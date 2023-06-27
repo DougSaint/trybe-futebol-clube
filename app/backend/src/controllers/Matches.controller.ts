@@ -32,6 +32,9 @@ class MatchesController {
       +homeTeamGoals,
       +awayTeamGoals,
     );
+    if (!data) {
+      return res.status(200).json({ message: 'not exists' });
+    }
     return res.status(200).json(data);
   }
 
