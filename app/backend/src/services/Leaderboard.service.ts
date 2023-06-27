@@ -3,7 +3,7 @@ import IMatches from '../Interfaces/IMatches';
 import teamsService from './Teams.service';
 import ITeamStats from '../Interfaces/ITeamStats';
 import IStatus from '../Interfaces/IStatus';
-/* eslint max-lines-per-function: ["error", 50] */
+
 type homeOrAway = 'home' | 'away';
 
 class LeaderBoardService {
@@ -52,16 +52,8 @@ class LeaderBoardService {
     return acc;
   }
 
-  static getTeamStatus(
-    team: string,
-    matches: IMatches[],
-    filterBy: homeOrAway,
-  ) {
-    const teamMatches = LeaderBoardService.getTeamMatches(
-      team,
-      matches,
-      filterBy,
-    );
+  static getTeamStatus(team: string, matches: IMatches[], filterBy: homeOrAway) {
+    const teamMatches = LeaderBoardService.getTeamMatches(team, matches, filterBy);
     const isHomeTeam = filterBy === 'home';
     return teamMatches.reduce(
       (acc, match) => {
@@ -71,11 +63,7 @@ class LeaderBoardService {
           match,
           isHomeTeam,
         );
-        newAcc = LeaderBoardService.updateGoalsOwnGoalsFavor(
-          newAcc,
-          match,
-          isHomeTeam,
-        );
+        newAcc = LeaderBoardService.updateGoalsOwnGoalsFavor(newAcc, match, isHomeTeam);
         return newAcc;
       },
       { wins: 0, loses: 0, draws: 0, totalGames: 0, goalsOwn: 0, goalsFavor: 0 },
@@ -127,29 +115,34 @@ class LeaderBoardService {
     return LeaderBoardService.sortByTotalPoints(data);
   }
 
+  private combineStats(homeStats: ITeamStats, awayStats: ITeamStats) {
+    console.log(this);
+    return {
+      name: homeStats.name,
+      totalPoints: homeStats.totalPoints + awayStats.totalPoints,
+      totalVictories: homeStats.totalVictories + awayStats.totalVictories,
+      totalLosses: homeStats.totalLosses + awayStats.totalLosses,
+      totalDraws: homeStats.totalDraws + awayStats.totalDraws,
+      totalGames: homeStats.totalGames + awayStats.totalGames,
+      goalsOwn: homeStats.goalsOwn + awayStats.goalsOwn,
+      goalsFavor: homeStats.goalsFavor + awayStats.goalsFavor,
+      goalsBalance: homeStats.goalsBalance + awayStats.goalsBalance,
+      efficiency: ((homeStats.totalPoints + awayStats.totalPoints) / (
+        (homeStats.totalGames + awayStats.totalGames) * 3)) * 100,
+    };
+  }
+
   async All() {
     const homeData = await this.home();
     const awayData = await this.away();
     const allTeams = await teamsService.getAllTeams();
-    return allTeams.map((t) => {
-      const a = homeData.find((data) => data.name === t.teamName);
-      const b = awayData.find((data) => data.name === t.teamName);
-      if (!a || !b) return;
-      return {
-        name: t.teamName,
-        totalPoints: a.totalPoints + b.totalPoints,
-        totalVictories: a.totalVictories + b.totalVictories,
-        totalLosses: a.totalLosses + b.totalLosses,
-        totalDraws: a.totalDraws + b.totalDraws,
-        totalGames: a.totalGames + b.totalGames,
-        goalsOwn: a.goalsOwn + b.goalsOwn,
-        goalsFavor: a.goalsFavor + b.goalsFavor,
-        goalsBalance: a.goalsBalance + b.goalsBalance,
-        efficiency:
-          ((a.totalPoints + b.totalPoints)
-            / ((a.totalGames + b.totalGames) * 3))
-          * 100,
-      };
+    return allTeams.map((team) => {
+      const homeTeamStats = homeData.find((data) => data.name === team.teamName);
+      const awayTeamStats = awayData.find((data) => data.name === team.teamName);
+      if (!homeTeamStats || !awayTeamStats) {
+        return;
+      }
+      return this.combineStats(homeTeamStats, awayTeamStats);
     });
   }
 }
