@@ -74,4 +74,10 @@ describe("LeaderBoardService Tests", () => {
       expect(item).to.have.property("efficiency").that.is.a("string");
     });
   });
+
+  it("should return leaderboard away data", async () => {
+    const response = await chai.request(app).get("/leaderboard");
+
+    expect(response.status).to.eq(200);
+  });
 });
