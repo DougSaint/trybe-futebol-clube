@@ -61,11 +61,10 @@ class LeaderBoardService {
     const isHomeTeam = filterBy === 'home';
     return teamMatches.reduce(
       (acc, match) => {
-        let newAcc = { ...acc }; // Copia as propriedades de acc para um novo objeto
+        let newAcc = { ...acc };
         newAcc = LeaderBoardService.updateWinsLossesDraws(newAcc, match, isHomeTeam);
         newAcc = LeaderBoardService.updateGoalsOwnGoalsFavor(newAcc, match, isHomeTeam);
-        newAcc.totalGames += 1; // Aqui estamos atualizando o valor de totalGames do novo objeto
-        return newAcc; // Retorna o novo objeto em vez de modificar acc
+        return newAcc;
       },
       { wins: 0, loses: 0, draws: 0, totalGames: 0, goalsOwn: 0, goalsFavor: 0 },
     );
