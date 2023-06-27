@@ -20,8 +20,6 @@ describe("Matches Endpoint Tests", () => {
     let authToken = "";
 
     beforeEach(async () => {
-      
-
       const loginResponse = await chai.request(app).post("/login").send({
         email: "admin@admin.com",
         password: "secret_admin",
@@ -29,8 +27,6 @@ describe("Matches Endpoint Tests", () => {
 
       authToken = loginResponse.body.token;
     });
-
-
 
     it("should finish a match", async () => {
       const matchId = 42;
@@ -69,7 +65,7 @@ describe("Matches Endpoint Tests", () => {
     beforeEach(async () => {
       matchId = 42;
       updatedGoals = { homeTeamGoals: 3, awayTeamGoals: 1 };
-     
+
       const loginResponse = await chai.request(app).post("/login").send({
         email: "admin@admin.com",
         password: "secret_admin",
@@ -102,6 +98,72 @@ describe("Matches Endpoint Tests", () => {
     });
   });
 
-  
- 
+  describe("Bad Request cases", () => {
+    let authToken = "";
+
+    beforeEach(async () => {
+      const loginResponse = await chai.request(app).post("/login").send({
+        email: "admin@admin.com",
+        password: "secret_admin",
+      });
+
+      authToken = loginResponse.body.token;
+    });
+
+    it("should possible create with an new match", async () => {
+      const response = await chai
+        .request(app)
+        .post(`/matches`)
+        .send({
+          homeTeamId: 16,
+          awayTeamId: 8,
+          homeTeamGoals: 2,
+          awayTeamGoals: 2,
+        })
+        .set("Authorization", authToken);
+
+      expect(response.status).to.equal(201);
+    });
+    it("should not be possible create with two equal teams", async () => {
+      const response = await chai
+        .request(app)
+        .post(`/matches`)
+        .send({
+          homeTeamId: 8,
+          awayTeamId: 8,
+          homeTeamGoals: 2,
+          awayTeamGoals: 2,
+        })
+        .set("Authorization", authToken);
+
+      expect(response.status).to.equal(422);
+    });
+    it("should not be possible create without an required field", async () => {
+      const response = await chai
+        .request(app)
+        .post(`/matches`)
+        .send({
+          homeTeamId: 8,
+          awayTeamId: 8,
+          awayTeamGoals: 2,
+        })
+        .set("Authorization", authToken);
+
+      expect(response.status).to.equal(400);
+    });
+    it("should not be possible create with an invalid team id", async () => {
+      const response = await chai
+        .request(app)
+        .post(`/matches`)
+        .send({
+          homeTeamId: 999,
+          awayTeamId: 8,
+          homeTeamGoals: 2,
+          awayTeamGoals: 2,
+        })
+        .set("Authorization", authToken);
+
+      expect(response.status).to.equal(404);
+    });
+  });
 });
